@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class RealmSyncService {
@@ -32,5 +33,23 @@ class RealmSyncService {
                 }
         }
 
+    }
+
+    fun getMovies() : ArrayList<CardResponse> {
+        val cardList: ArrayList<CardResponse> = ArrayList()
+
+        realmScope.launch {
+            realmMoviesDAO.getRealmMovies()
+                .catch {e ->
+                    e.printStackTrace()
+                }
+                .collect {
+                    if (it != null) {
+                        cardList.add(it)
+                    }
+                }
+        }
+
+        return cardList
     }
 }

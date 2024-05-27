@@ -33,12 +33,23 @@ class MainActivity : AppCompatActivity() {
         val userId =  UserIdRequest("1")
         val call = service.getCards (userId)
 
+        val realmSyncService = RealmSyncService()
+        val cardsList = realmSyncService.getMovies()
+
+        // show cards from db if it is not empty
+        if (cardsList.isNotEmpty()) {
+            var recyclerView = binding.moviesRecyclerView
+            recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
+
+            var adapter = CardsAdapter(cardsList.toList())
+            recyclerView.adapter = adapter
+        }
+
+        // instead, call rest api and then save to db
         call.enqueue(object : retrofit2.Callback<List<CardResponse>> {
             override fun onResponse(call: retrofit2.Call<List<CardResponse>>, response: retrofit2.Response<List<CardResponse>>) {
                 if (response.code() == 200) {
                     val cardsResponse = response.body()!!
-
-                    val realmSyncService = RealmSyncService()
 
                     cardsResponse.forEach { card ->
                         realmSyncService.doSync(card)
@@ -51,6 +62,8 @@ class MainActivity : AppCompatActivity() {
                     recyclerView.adapter = adapter
                 }
             }
+
+            val rev = realmSyncService.getMovies()
 
             override fun onFailure(call: retrofit2.Call<List<CardResponse>>, t: Throwable) {
                 var e = t.message
